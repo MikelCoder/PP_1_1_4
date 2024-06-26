@@ -36,9 +36,6 @@ public class UserDaoHibernateImpl implements UserDao {
     }
 
 
-
-
-
     @Override
     public void dropUsersTable() {
         Transaction transaction = null;
