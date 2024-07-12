@@ -6,6 +6,10 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 public class Util {
 
     private static final String URL = "jdbc:mysql://localhost:3306/PP3_4";
@@ -13,6 +17,7 @@ public class Util {
     private static final String PASSWORD = "root";
 
     private static SessionFactory sessionFactory;
+    private static Connection connection;
 
     static {
         try {
@@ -34,13 +39,36 @@ public class Util {
             System.err.println("Initial SessionFactory creation failed." + e);
             throw new ExceptionInInitializerError(e);
         }
+
+        try {
+            connection = DriverManager.getConnection(URL, USER, PASSWORD);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create a database connection.");
+        }
     }
 
     public static SessionFactory getSessionFactory() {
         return sessionFactory;
     }
 
+    public static Connection getConnection() {
+        return connection;
+    }
+
+    public static void closeConnection() {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public static void shutdown() {
         getSessionFactory().close();
+        closeConnection();
     }
 }
+

@@ -2,52 +2,46 @@ package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
-import jm.task.core.jdbc.util.Util;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
-    public UserDaoHibernateImpl() {
 
+    private final Connection connection;
+
+    public UserDaoHibernateImpl() {
+        this.connection = Util.getConnection();
     }
 
     @Override
     public void createUsersTable() {
-        Transaction transaction = null;
-        try (Session session = Util.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            String sql = "CREATE TABLE IF NOT EXISTS users (" +
-                    "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
-                    "name VARCHAR(255), " +
-                    "lastName VARCHAR(255), " +
-                    "age TINYINT) " +
-                    "ENGINE=InnoDB"; // Исправленный синтаксис для указания типа таблицы
-            session.createSQLQuery(sql).executeUpdate();
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
+        String sql = "CREATE TABLE IF NOT EXISTS users (" +
+                "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
+                "name VARCHAR(255), " +
+                "lastName VARCHAR(255), " +
+                "age TINYINT) " +
+                "ENGINE=InnoDB";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.executeUpdate();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-
     @Override
     public void dropUsersTable() {
-        Transaction transaction = null;
-        try (Session session = Util.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            String sql = "DROP TABLE IF EXISTS users";
-            session.createSQLQuery(sql).executeUpdate();
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
+        String sql = "DROP TABLE IF EXISTS users";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.executeUpdate();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -57,10 +51,7 @@ public class UserDaoHibernateImpl implements UserDao {
         Transaction transaction = null;
         try (Session session = Util.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
-            User user = new User();
-            user.setName(name);
-            user.setLastName(lastName);
-            user.setAge(age);
+            User user = new User(name, lastName, age);
             session.save(user);
             transaction.commit();
             System.out.printf("User с именем — %s добавлен в базу данных%n", name);
@@ -109,16 +100,11 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
-        Transaction transaction = null;
-        try (Session session = Util.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            String sql = "TRUNCATE TABLE users";
-            session.createSQLQuery(sql).executeUpdate();
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
+        String sql = "TRUNCATE TABLE users";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.executeUpdate();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
